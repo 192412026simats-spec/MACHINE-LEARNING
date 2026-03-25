@@ -1,0 +1,36 @@
+# FIND-S Algorithm Implementation
+
+import csv
+
+# Function to implement Find-S Algorithm
+def find_s(training_data):
+    # Initialize hypothesis with first positive example
+    hypothesis = None
+
+    for example in training_data:
+        # Check if example is positive
+        if example[-1].lower() == "yes":
+            if hypothesis is None:
+                hypothesis = example[:-1]
+            else:
+                for i in range(len(hypothesis)):
+                    if hypothesis[i] != example[i]:
+                        hypothesis[i] = "?"
+    
+    return hypothesis
+
+
+# Sample Training Data (You can modify this)
+training_data = [
+    ["Sunny", "Warm", "Normal", "Strong", "Warm", "Same", "Yes"],
+    ["Sunny", "Warm", "High", "Strong", "Warm", "Same", "Yes"],
+    ["Rainy", "Cold", "High", "Strong", "Warm", "Change", "No"],
+    ["Sunny", "Warm", "High", "Strong", "Cool", "Change", "Yes"]
+]
+
+# Run Find-S Algorithm
+hypothesis = find_s(training_data)
+
+# Display Results
+print("Final Hypothesis:")
+print(hypothesis)
