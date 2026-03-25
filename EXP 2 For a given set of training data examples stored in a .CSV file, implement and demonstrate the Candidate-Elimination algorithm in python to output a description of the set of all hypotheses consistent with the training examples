@@ -1,0 +1,83 @@
+import csv
+
+# Load CSV file
+from google.colab import files
+uploaded = files.upload()
+
+filename = list(uploaded.keys())[0]
+
+data = []
+with open(filename, 'r') as file:
+    reader = csv.reader(file)
+    for row in reader:
+        data.append(row)
+
+# Remove header
+attributes = data[0][:-1]
+examples = data[1:]
+
+# Initialize S and G
+S = ['0'] * len(attributes)
+G = [['?'] * len(attributes)]
+
+# Helper functions
+def is_consistent(h, x):
+    return all(h[i] == x[i] or h[i] == '?' for i in range(len(h)))
+
+def min_generalizations(h, x):
+    new_h = h.copy()
+    for i in range(len(h)):
+        if h[i] == '0':
+            new_h[i] = x[i]
+        elif h[i] != x[i]:
+            new_h[i] = '?'
+    return new_h
+
+def min_specializations(g, x, domains):
+    specializations = []
+    for i in range(len(g)):
+        if g[i] == '?':
+            for val in domains[i]:
+                if val != x[i]:
+                    new_h = g.copy()
+                    new_h[i] = val
+                    specializations.append(new_h)
+    return specializations
+
+# Get domains
+domains = []
+for i in range(len(attributes)):
+    domains.append(list(set([example[i] for example in examples])))
+
+# Candidate Elimination Algorithm
+for example in examples:
+    x = example[:-1]
+    label = example[-1]
+
+    if label.lower() == 'yes':  # Positive example
+        G = [g for g in G if is_consistent(g, x)]
+
+        if not is_consistent(S, x):
+            S = min_generalizations(S, x)
+        
+        G = [g for g in G if any(s == '?' or s == g[i] for i, s in enumerate(S))]
+
+    else:  # Negative example
+        G_new = []
+        for g in G:
+            if is_consistent(g, x):
+                specializations = min_specializations(g, x, domains)
+                G_new.extend(specializations)
+            else:
+                G_new.append(g)
+        G = G_new
+
+        G = [g for g in G if is_consistent(g, S)]
+
+# Output results
+print("Final Specific Hypothesis (S):")
+print(S)
+
+print("\nFinal General Hypotheses (G):")
+for g in G:
+    print(g)
